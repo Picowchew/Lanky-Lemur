@@ -1,0 +1,9 @@
+{
+  "PREFIX": "[",
+  "TOKEN": "insert-bot-token-here",
+  "GUILD_ID": "012345678901234567",
+  "USER_ID": ["012345678901234567", "012345678901234567"],
+  "CLOCK": "<a:clock:012345678901234567>",
+  "CODING": "<a:coding:012345678901234567>",
+  "CROSSMARK": "<a:crossmark:012345678901234567>"
+}

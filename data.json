@@ -1,0 +1,19 @@
+{
+  "default": {
+    "beg": 45,
+    "bet": 8,
+    "blackjack": 10,
+    "crime": 45,
+    "daily": 86400,
+    "dig": 40,
+    "fish": 40,
+    "highlow": 30,
+    "hunt": 40,
+    "monthly": 2592000,
+    "postmemes": 30,
+    "search": 30,
+    "slots": 5,
+    "snakeeyes": 10,
+    "work": 3600
+  }
+}

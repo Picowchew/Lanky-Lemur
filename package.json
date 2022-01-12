@@ -1,0 +1,25 @@
+{
+  "name": "lanky-lemur",
+  "version": "1.0.0",
+  "description": "Lanky Lemur Discord bot at your service",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Picowchew/Lanky-Lemur"
+  },
+  "keywords": [
+    "discord-bot",
+    "discord"
+  ],
+  "author": "Picowchew",
+  "license": "",
+  "dependencies": {
+    "discord.js": "^13.5.1"
+  },
+  "engines": {
+    "node": ">=16.6.0"
+  }
+}
