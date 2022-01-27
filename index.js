@@ -85,11 +85,11 @@ client.on('messageCreate', async message => {
       const now = Date.now();
       for (const key in data[author_id_str]) {
         if (!data[author_id_str][key]) {
-          embed.addField(key, 'Information will be ready soon!');
+          embed.addField(key, 'Information will be ready soon!', true);
         } else if (now - data[author_id_str][key] < data['default'][key] * 1000) {
-          embed.addField(key, time_str_from_millisec(data['default'][key] * 1000 - (now - data[author_id_str][key])));
+          embed.addField(key, time_str_from_millisec(data['default'][key] * 1000 - (now - data[author_id_str][key])), true);
         } else {
-          embed.addField(key, 'Available!');
+          embed.addField(key, 'Available!', true);
         }
       }
     }
