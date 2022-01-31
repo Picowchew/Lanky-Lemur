@@ -82,6 +82,23 @@ client.on('messageCreate', async message => {
     if (!Object.keys(data).includes(author_id_str)) {
       embed.setDescription('Information will be ready soon!');
     } else {
+      let available = []
+      const now = Date.now();
+      for (const key in data[author_id_str]) {
+        if (data[author_id_str][key] && now - data[author_id_str][key] >= data['default'][key] * 1000) {
+          available.push(key)
+        }
+      }
+      embed.setDescription(`\`${available.join('`, `')}\``)
+    }
+    await message.channel.send({ embeds: [embed] });
+  } else if (command === 'all') {
+    let embed = new MessageEmbed()
+      .setColor('#bd52f7') // Purple
+      .setTitle('All Commands');
+    if (!Object.keys(data).includes(author_id_str)) {
+      embed.setDescription('Information will be ready soon!');
+    } else {
       const now = Date.now();
       for (const key in data[author_id_str]) {
         if (!data[author_id_str][key]) {
@@ -101,7 +118,7 @@ client.on('messageCreate', async message => {
       .setColor('#4fde1f') // Green
       .setDescription(`Prefix is \`${PREFIX}\`.`)
       .addFields(
-        { name: 'List of Commands', value: 'available/a, clear, github/git, list, uptime' }
+        { name: 'List of Commands', value: 'all, available/a, clear, github/git, list, uptime' }
       );
     await message.channel.send({ embeds: [list_embed] });
   } else if (command === 'uptime') {
