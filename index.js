@@ -59,7 +59,7 @@ client.on('messageCreate', async message => {
 
   const command = msg.startsWith(PREFIX) ? msg.slice(PREFIX.length) : msg;
 
-  if (command.startsWith('clear ') && !(message.channel.type === 'dm') && message.guild.id === GUILD_ID && USER_ID.includes(author_id_str)) {
+  if ((command.startsWith('clear ') || command.startsWith('clearf')) && !(message.channel.type === 'dm') && message.guild.id === GUILD_ID && USER_ID.includes(author_id_str)) {
     const clear_split = msg.split(' ');
     if (clear_split.length === 2) {
       const num = clear_split[1];
@@ -67,10 +67,17 @@ client.on('messageCreate', async message => {
         await message.channel.send(`${CROSSMARK} Not a valid number.`);
       } else if (num < 1) {
         await message.channel.send(`${CROSSMARK} Number must be at least 1.`);
-      } else if (num >= 100) {
-        await message.channel.bulkDelete(100).catch(err => console.error(err));
       } else {
-        await message.channel.bulkDelete(parseInt(num, 10) + 1).catch(err => console.error(err));
+        if (num >= 100) messages_limit = 100;
+        else messages_limit = parseInt(num, 10) + 1;
+        if (command.startsWith('clear ')) {
+          await message.channel.bulkDelete(messages_limit, true).catch(err => console.error(err));
+        } else {
+          const msgs = await message.channel.messages.fetch({limit: messages_limit});
+          for (const msg of msgs) {
+            await msg[1].delete();
+          }
+        }
       }
     } else {
       await message.channel.send(`${CROSSMARK} Too many arguments provided.`);
@@ -118,7 +125,7 @@ client.on('messageCreate', async message => {
       .setColor('#4fde1f') // Green
       .setDescription(`Prefix is \`${PREFIX}\`.`)
       .addFields(
-        { name: 'List of Commands', value: 'all, available/a, clear, github/git, list, uptime' }
+        { name: 'List of Commands', value: 'all, available/a, clear, clearf, github/git, list, uptime' }
       );
     await message.channel.send({ embeds: [list_embed] });
   } else if (command === 'uptime') {
