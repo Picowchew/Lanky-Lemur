@@ -96,7 +96,11 @@ client.on('messageCreate', async message => {
           available.push(key)
         }
       }
-      embed.setDescription(`\`${available.join('`, `')}\``)
+      if (available.length) {
+        embed.setDescription(`\`${available.join('`, `')}\``)
+      } else {
+        embed.setDescription('Information will be ready soon!');
+      }
     }
     await message.channel.send({ embeds: [embed] });
   } else if (command === 'all') {
