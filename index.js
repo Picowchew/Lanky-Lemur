@@ -1,8 +1,31 @@
-const { Client, Intents, MessageEmbed } = require('discord.js');
-const { PREFIX, TOKEN, GUILD_ID, USER_ID, CLOCK, CODING, CROSSMARK } = require('./config.json');
-const fs = require('fs');
+const { Client, Intents, MessageEmbed } = require("discord.js");
+const { readFileSync, writeFile } = require("fs");
+const {
+  CLOCK,
+  CODING,
+  CROSSMARK,
+  GUILD_ID,
+  PREFIX,
+  TOKEN,
+  USER_ID,
+} = require("./config.json");
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
+const client = new Client({
+  intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
+});
+
+const alias_to_command = {
+  bj: "blackjack",
+  hl: "highlow",
+  pm: "postmemes",
+  scout: "search",
+  se: "snakeeyes",
+  job: "work",
+};
+const command_data = JSON.parse(readFileSync("data.json"));
+Object.keys(command_data["default"]).forEach(
+  (command) => (alias_to_command[command] = command)
+);
 
 function time_str_from_millisec(millisec) {
   const days = Math.floor(millisec / 86400000);
@@ -22,34 +45,44 @@ function time_str_from_millisec(millisec) {
   return msg;
 }
 
-client.once('ready', async () => {
-  console.log(`${client.user.tag}\n${client.user.id}\n${Date()}\n===== Logged in successfully =====`);
-  client.user.setActivity(`you | ${PREFIX}list`, { type: 'WATCHING' });
+client.once("ready", async () => {
+  console.log(
+    `${client.user.tag}\n${
+      client.user.id
+    }\n${Date()}\n===== Logged in successfully =====`
+  );
+  client.user.setActivity(`you | ${PREFIX}list`, { type: "WATCHING" });
 });
 
-client.on('messageCreate', async message => {
+client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
 
   const msg = message.content.toLowerCase();
   const author_id_str = message.author.id.toString();
-  let data = JSON.parse(fs.readFileSync('data.json'));
+  let data = JSON.parse(readFileSync("data.json"));
 
-  if (!(message.channel.type === 'dm' || msg.startsWith(PREFIX))) {
-    if (msg.startsWith('pls ')) {
-      const arg = msg.split(' ')[1];
-      if (!Object.keys(data['default']).includes(arg)) return;
+  if (!(message.channel.type === "dm" || msg.startsWith(PREFIX))) {
+    if (msg.startsWith("pls ")) {
+      let arg = msg.split(" ")[1];
+      if (!Object.keys(alias_to_command).includes(arg)) return;
+      arg = alias_to_command[arg];
       const now = Date.now();
       if (!Object.keys(data).includes(author_id_str)) {
-        data[author_id_str] = JSON.parse(JSON.stringify(data['default']));
+        data[author_id_str] = JSON.parse(JSON.stringify(data["default"]));
         for (const key in data[author_id_str]) {
           data[author_id_str][key] = key === arg ? now : 0;
         }
-        fs.writeFile('data.json', JSON.stringify(data, null, '  '), err => {
+        writeFile("data.json", JSON.stringify(data, null, "  "), (err) => {
           if (err) console.error(err);
         });
-      } else if (!(data[author_id_str][arg] && now - data[author_id_str][arg] < data['default'][arg] * 1000)) {
+      } else if (
+        !(
+          data[author_id_str][arg] &&
+          now - data[author_id_str][arg] < data["default"][arg] * 1000
+        )
+      ) {
         data[author_id_str][arg] = now;
-        fs.writeFile('data.json', JSON.stringify(data, null, '  '), err => {
+        writeFile("data.json", JSON.stringify(data, null, "  "), (err) => {
           if (err) console.error(err);
         });
       }
@@ -59,8 +92,13 @@ client.on('messageCreate', async message => {
 
   const command = msg.startsWith(PREFIX) ? msg.slice(PREFIX.length) : msg;
 
-  if ((command.startsWith('clear ') || command.startsWith('clearf')) && !(message.channel.type === 'dm') && message.guild.id === GUILD_ID && USER_ID.includes(author_id_str)) {
-    const clear_split = msg.split(' ');
+  if (
+    (command.startsWith("clear ") || command.startsWith("clearf")) &&
+    !(message.channel.type === "dm") &&
+    message.guild.id === GUILD_ID &&
+    USER_ID.includes(author_id_str)
+  ) {
+    const clear_split = msg.split(" ");
     if (clear_split.length === 2) {
       const num = clear_split[1];
       if (isNaN(num)) {
@@ -70,10 +108,14 @@ client.on('messageCreate', async message => {
       } else {
         if (num >= 100) messages_limit = 100;
         else messages_limit = parseInt(num, 10) + 1;
-        if (command.startsWith('clear ')) {
-          await message.channel.bulkDelete(messages_limit, true).catch(err => console.error(err));
+        if (command.startsWith("clear ")) {
+          await message.channel
+            .bulkDelete(messages_limit, true)
+            .catch((err) => console.error(err));
         } else {
-          const msgs = await message.channel.messages.fetch({limit: messages_limit});
+          const msgs = await message.channel.messages.fetch({
+            limit: messages_limit,
+          });
           for (const msg of msgs) {
             await msg[1].delete();
           }
@@ -82,58 +124,75 @@ client.on('messageCreate', async message => {
     } else {
       await message.channel.send(`${CROSSMARK} Too many arguments provided.`);
     }
-  } else if (['available', 'a'].includes(command)) {
+  } else if (["available", "a"].includes(command)) {
     let embed = new MessageEmbed()
-      .setColor('#1cb2fc') // Blue
-      .setTitle('Available Commands');
+      .setColor("#1cb2fc") // Blue
+      .setTitle("Available Commands");
     if (!Object.keys(data).includes(author_id_str)) {
-      embed.setDescription('Information will be ready soon!');
+      embed.setDescription("Information will be ready soon!");
     } else {
-      let available = []
+      let available = [];
       const now = Date.now();
       for (const key in data[author_id_str]) {
-        if (data[author_id_str][key] && now - data[author_id_str][key] >= data['default'][key] * 1000) {
-          available.push(key)
+        if (
+          data[author_id_str][key] &&
+          now - data[author_id_str][key] >= data["default"][key] * 1000
+        ) {
+          available.push(key);
         }
       }
       if (available.length) {
-        embed.setDescription(`\`${available.join('`, `')}\``)
+        embed.setDescription(`\`${available.join("`, `")}\``);
       } else {
-        embed.setDescription('Information will be ready soon!');
+        embed.setDescription("Information will be ready soon!");
       }
     }
     await message.channel.send({ embeds: [embed] });
-  } else if (command === 'all') {
+  } else if (command === "all") {
     let embed = new MessageEmbed()
-      .setColor('#bd52f7') // Purple
-      .setTitle('All Commands');
+      .setColor("#bd52f7") // Purple
+      .setTitle("All Commands");
     if (!Object.keys(data).includes(author_id_str)) {
-      embed.setDescription('Information will be ready soon!');
+      embed.setDescription("Information will be ready soon!");
     } else {
       const now = Date.now();
       for (const key in data[author_id_str]) {
         if (!data[author_id_str][key]) {
-          embed.addField(key, 'Information will be ready soon!', true);
-        } else if (now - data[author_id_str][key] < data['default'][key] * 1000) {
-          embed.addField(key, time_str_from_millisec(data['default'][key] * 1000 - (now - data[author_id_str][key])), true);
+          embed.addField(key, "Information will be ready soon!", true);
+        } else if (
+          now - data[author_id_str][key] <
+          data["default"][key] * 1000
+        ) {
+          embed.addField(
+            key,
+            time_str_from_millisec(
+              data["default"][key] * 1000 - (now - data[author_id_str][key])
+            ),
+            true
+          );
         } else {
-          embed.addField(key, 'Available!', true);
+          embed.addField(key, "Available!", true);
         }
       }
     }
     await message.channel.send({ embeds: [embed] });
-  } else if (['github', 'git'].includes(command)) {
-    await message.channel.send(`${CODING} GitHub repository URL is <https://github.com/Picowchew/Lanky-Lemur>.`);
-  } else if (command === 'list') {
+  } else if (["github", "git"].includes(command)) {
+    await message.channel.send(
+      `${CODING} GitHub repository URL is <https://github.com/Picowchew/Lanky-Lemur>.`
+    );
+  } else if (command === "list") {
     const list_embed = new MessageEmbed()
-      .setColor('#4fde1f') // Green
+      .setColor("#4fde1f") // Green
       .setDescription(`Prefix is \`${PREFIX}\`.`)
-      .addFields(
-        { name: 'List of Commands', value: 'all, available/a, clear, clearf, github/git, list, uptime' }
-      );
+      .addFields({
+        name: "List of Commands",
+        value: "all, available/a, clear, clearf, github/git, list, uptime",
+      });
     await message.channel.send({ embeds: [list_embed] });
-  } else if (command === 'uptime') {
-    await message.channel.send(`${CLOCK} Uptime is **` + time_str_from_millisec(client.uptime) + '**.');
+  } else if (command === "uptime") {
+    await message.channel.send(
+      `${CLOCK} Uptime is **` + time_str_from_millisec(client.uptime) + "**."
+    );
   }
 });
 
